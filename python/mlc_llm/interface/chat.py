@@ -251,29 +251,39 @@ class ChatState:
         # Multi-line input support: set escape+enter as start a new line
         kb = _set_up_key_bindings()
 
-        while True:
-            prompt = get_prompt(
-                ">>> ",  # pylint: disable=protected-access
-                key_bindings=kb,
-                multiline=True,
-            )
-            if prompt[:4] == "/set":
-                overrides = ChatCompletionOverride.from_str(prompt.split()[1])
-                for key, value in dataclasses.asdict(overrides).items():
-                    if value is not None:
-                        setattr(self.overrides, key, value)
-            elif prompt[:6] == "/stats":
-                self.stats()
-            elif prompt[:8] == "/metrics":
-                self.metrics()
-            elif prompt[:6] == "/reset":
-                self.reset()
-            elif prompt[:5] == "/exit":
-                break
-            elif prompt[:5] == "/help":
-                _print_help_str()
-            else:
-                self.generate(prompt)
+        try:
+            while True:
+                prompt = get_prompt(
+                    ">>> ",  # pylint: disable=protected-access
+                    key_bindings=kb,
+                    multiline=True,
+                )
+                command = prompt.strip()
+                if not command:
+                    continue
+                if command[:4] == "/set":
+                    overrides = ChatCompletionOverride.from_str(command.split(maxsplit=1)[1])
+                    for key, value in dataclasses.asdict(overrides).items():
+                        if value is not None:
+                            setattr(self.overrides, key, value)
+                elif command[:6] == "/stats":
+                    self.stats()
+                elif command[:8] == "/metrics":
+                    self.metrics()
+                elif command[:6] == "/reset":
+                    self.reset()
+                elif command[:5] == "/exit":
+                    break
+                elif command[:5] == "/help":
+                    _print_help_str()
+                else:
+                    self.generate(prompt)
+        finally:
+            if hasattr(self.engine, "terminate"):
+                try:
+                    self.engine.terminate()
+                except Exception:  # pylint: disable=broad-exception-caught
+                    pass
 
 
 def chat(

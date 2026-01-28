@@ -68,6 +68,21 @@ Please visit our [documentation](https://llm.mlc.ai/docs/) to get started with M
 - [Installation](https://llm.mlc.ai/docs/install/mlc_llm)
 - [Quick start](https://llm.mlc.ai/docs/get_started/quick_start)
 - [Introduction](https://llm.mlc.ai/docs/get_started/introduction)
+- [macOS Metal/CPU guide](macos/USAGE.md)
+- [macOS Metal dev (source build)](macos/metal-dev/README.md)
+- [macOS CPU dev (source build)](macos/cpu-dev/README.md)
+
+macOS local scripts summary:
+- `macos/metal` / `macos/cpu`: wheel-based runs (no source builds).
+- `macos/metal-dev` / `macos/cpu-dev`: source builds of TVM (C++ + Python), TVM-FFI, and MLC LLM (C++ + Python).
+See `macos/USAGE.md` for environment-variable recipes (first run, rerun, tests-only, chat-only).
+
+## macOS Local Quickstart
+Keep macOS details in one place to avoid bloating this README. Quick links:
+- Wheel runs: `macos/metal/README.md`, `macos/cpu/README.md`
+- Source builds: `macos/metal-dev/README.md`, `macos/cpu-dev/README.md`
+- Options and scenarios: `macos/USAGE.md`
+This keeps platform specifics easy to find while allowing frequent macOS updates without churn here.
 
 ## Citation
 
@@ -131,3 +146,15 @@ The underlying techniques of MLC LLM include:
   }
   ```
 </details>
+
+## Performance Notes (macOS reference)
+These settings have direct impact on runtime speed and memory usage:
+- Model size and quantization (e.g., 3B vs 8B; `q4f16_1` is faster/smaller).
+- Context/window settings (`context_window_size`, `prefill_chunk_size`, `sliding_window_size`).
+- JIT cache policy (`MLC_JIT_POLICY=ON/READONLY/REDO`) and reusing cached model libs.
+- Build type and LLVM config in dev builds (`RelWithDebInfo`, LLVM version/target).
+- Device selection (`--device metal` vs `--device cpu`).
+
+Notes on missing Python deps:
+- Most missing deps in dev (`datasets`, `torch`, `transformers`, etc.) are tooling/server utilities and do **not** improve macOS CPU/Metal performance.
+- `flashinfer` is CUDA-only and does not affect macOS performance.
